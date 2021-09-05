@@ -1,0 +1,452 @@
+---
+title: "BellaBeat Case Study 2021"
+author: "Ertiza Abbas"
+date: "9/3/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Case Study Objectives:
+ - My job, as an aspiring junior data analyst, is to provide primary and secondary stakeholders within the company with insightful recommendations regarding one product in their line of wellness products. For this case study I have decided to go with the smartwatch and have been tasked to use a Kaggle dataset for FitBit Fitness Tracker (under CC0: Public Domain license) as a benchmark since it is also a smartwatch and collects similar data to Bellabeat’s smartwatch.
+
+
+## Setting up enviornment for Data Analysis 
+
+** Data Sselection for Dalay Analysis.
+
+
+### INSTALLING Required packages and thier related libraries. 
+
+```{r cars}
+install.packages("tidyverse")
+install.packages("kableExtra")
+install.packages("scales")
+install.packages("highcharter")
+install.packages("lubridate")
+install.packages("dplyr")
+install.packages("here")
+install.packages("ggplot2")
+```
+
+## Relevant libraries for installed packages 
+
+```{r}
+library(kableExtra)
+library(tidyverse)
+library(scales)
+library(highcharter)
+library(lubridate)
+library(dplyr)
+library(here)
+library(ggplot2)
+```
+
+
+
+## importing data into R
+```{r}
+daily_activity <-read_csv("D:/Google Data analytics professional certificate course/CapeStone Project -GDAC 2021/archive (4)/Fitabase Data 4.12.16-5.12.16/dailyActivity_merged.csv")
+
+sleep <- read_csv("D:/Google Data analytics professional certificate course/CapeStone Project -GDAC 2021/archive (4)/Fitabase Data 4.12.16-5.12.16/sleepDay_merged.csv")
+
+weight <- read_csv("D:/Google Data analytics professional certificate course/CapeStone Project -GDAC 2021/archive (4)/Fitabase Data 4.12.16-5.12.16/weightLogInfo_merged.csv")
+
+```
+
+## Let's confirm whether data imported correctly.
+```{r}
+head(daily_activity)
+head(sleep)
+head(weight)
+```
+## Data Exploration 
+```{r}
+n_distinct(daily_activity$Id)
+```
+```{r}
+n_distinct(sleep$Id)
+```
+
+```{r}
+n_distinct(weight$Id)
+```
+
+```{r}
+nrow(daily_activity)
+nrow(sleep)
+nrow(weight)
+```
+## through ecploration of data we found:
+ - there are more than 30 users ID's in daily_activity dataset
+ - sleep data set having less than 30
+ - and weight dataset have just 8 unique ids.
+ - why there are few unique ids in weight section?> are users asked fitbit to not log this information or what?>
+ - let's explore further as above required information cannot be gatheres as it is only users discretion to share or not share.
+ 
+ ** let's explor that little bit more to understand the story.
+ 
+```{r}
+View(daily_activity)
+View(sleep)
+View(weight)
+```
+ 
+ 
+ ## Processing Data
+ 
+ ### daily_activity
+ - Removing Missing values
+ - Removing any duplcated values
+ - rename the ActivityDate to Date
+ - change the Date column from character to date type
+ - Create a new column with Weekdays
+ - Create new column TotalActiveMinutes summing up all active minutes
+ 
+```{r}
+# Removing missing values if any
+sum(duplicated(daily_activity))
+```
+```{r}
+#Missing values
+sum(is.na(daily_activity))
+```
+```{r}
+#Rename ActivityDate to Date
+colnames(daily_activity)[colnames(daily_activity) == "ActivityDate"] <- "Date"
+```
+ 
+```{r}
+#Format character to date type
+daily_activity$Date <-  as.Date(daily_activity$Date,format='%m/%d/%Y')
+```
+ 
+```{r}
+#Add new column Weekdays
+daily_activity$Weekdays <- wday(daily_activity$Date, label = TRUE, abbr = FALSE)
+```
+
+```{r}
+#Add new column with total active minutes
+daily_activity2 <- daily_activity %>% 
+  mutate(TotalActiveMinutes = VeryActiveMinutes + FairlyActiveMinutes + LightlyActiveMinutes)
+```
+
+```{r}
+#Confirm changes
+str(daily_activity2)
+View(daily_activity2)
+```
+
+ * No duplicates found, no missing values found. This operation was successful.
+ 
+## Sleep
+ - Removing Missing values
+ - Removing any duplcated values
+ - rename the ActivityDate to Date
+ - change the Date column from character to date type
+ - Create a new column with Weekdays
+ - Create new column TotalActiveMinutes summing up all active minutes
+ 
+```{r}
+#Duplicates
+sum(duplicated(sleep))
+```
+```{r}
+#Missing values
+sum(is.na(sleep))
+```
+ 
+```{r}
+#Rename ActivityDate to Date
+colnames(sleep)[colnames(sleep) == "SleepDay"] <- "Date"
+```
+
+```{r}
+#Format character to date type
+sleep$Date <- as.Date(sleep$Date, format = '%m/%d/%Y')
+```
+
+
+```{r}
+library(dplyr)
+library(lubridate)
+```
+
+
+
+```{r}
+#Add new column Weekdays
+sleep$Weekdays <- wday(sleep$Date, label = TRUE, abbr = FALSE)
+```
+
+ 
+```{r}
+#Confirm changes
+str(sleep)
+View(sleep)
+```
+ 
+ ## 3 Duplicate Values and 0 Missing Values found. 
+ 
+ ## weight
+ 
+ - Removing Missing values
+ - Removing any duplcated values
+ - rename the ActivityDate to Date
+ - change the Date column from character to date type
+ - Create a new column with Weekdays
+ - Create new column TotalActiveMinutes summing up all active minutes
+
+```{r}
+#Duplicates
+sum(duplicated(weight))
+```
+
+```{r}
+#Missing values
+sum(is.na(weight$WeightPounds))
+```
+
+```{r}
+#Separate date and time 
+weight2 <- weight %>% 
+  separate(Date, into=c("Date","Time"), sep=" ",remove =TRUE )
+```
+```{r}
+#Format column to date type
+weight2$Date <- as.Date(weight2$Date,format='%m/%d/%Y')
+```
+
+
+```{r}
+#Add new column Weekdays
+weight2$Weekdays<- wday(weight2$Date, label = TRUE, abbr = FALSE)
+```
+
+
+```{r}
+#Confirm changes
+str(weight2)
+View(weight2)
+```
+
+### up till now all above functions are successful / no missing or duplicated values found 
+
+## Now we are going to merge the datasets
+#### We are going to combined the cleaned data into one set which will be big one with ID, and Date 
+
+```{r}
+merged_final_df <- merge(merge(daily_activity2, sleep, by = c('Id', 'Date'), all = TRUE), weight2, by = c('Id', 'Date'), all = TRUE)
+```
+
+```{r}
+#checking the data type and statistical summary.
+
+str(merged_final_df)
+
+summary(merged_final_df)
+```
+
+# Lets Summarize the Cleaned Data
+### daily_activity
+```{r}
+daily_activity2 %>%
+  select(TotalSteps,
+         TotalDistance,
+         Calories,
+         VeryActiveMinutes,
+         FairlyActiveMinutes,
+         LightlyActiveMinutes) %>%
+  summary()
+```
+
+### Sleep
+```{r}
+sleep %>%
+  select(TotalSleepRecords,
+         TotalMinutesAsleep,
+         TotalTimeInBed) %>%
+  summary()
+```
+
+
+### weight
+```{r}
+weight2 %>%
+  select(WeightKg,
+         BMI,
+         IsManualReport) %>%
+  summary()
+```
+
+## PRELIMINARY CONCLUSION 
+Looking at the merged dataset, we can see that data was logged for 31 days. Comparing SedentaryMinutes Max. value of 1440.0 to LightlyActive and VeryActive Max. values - 518.0 and 210.0 respectively - we can deduce that most users are neither professional sportspeople nor lead very active lifestyles. Moreover, if we look at the Mean WeightKg = 72.04, one might assume that the majority of users are women.
+
+Furthermore, looking at the TotalMinutesAsleep column in my merged dataset we can see that the mean amount of minutes asleep = 419.5 which is equal to roughly 7 hours of sleep. According to the U.S. Department of Health and Human Services "Most adults need 7 or more hours of good-quality sleep on a regular schedule each night. Getting enough sleep isn't only about total hours of sleep. It's also important to get good-quality sleep on a regular schedule, so you feel rested when you wake up."
+
+
+### Initial hypothesizing
+
+the company Bellabeat might want to implement a feature in coming days that notifies users if they don't sleep enough or encourage them to walk more.
+
+# Data Visualization 
+**Plotting Auto vs Manual reports of weight data
+It could be interesting to discover how dedicated are FitBit users when it comes to reporting their weight. The following plot shows the the distribution of Auto Report vs. Manual Report by type:
+
+```{r}
+report_method_name <- c("Manual Report","Auto Report")
+report_method_T_F <- c(length(which(weight$IsManualReport =="TRUE")),length(which(weight$IsManualReport =="FALSE")))
+manual_report_or_not <- data.frame(report_method_name,report_method_T_F)
+```
+
+## Using ggplot for plotting 
+```{r}
+ggplot(manual_report_or_not, aes(report_method_name,report_method_T_F)) +
+  geom_bar(stat= "identity", fill="darkblue")+ 
+  geom_text(aes(label=report_method_T_F), vjust=3, color="Yellow", size=5)+
+  labs(title="Weight Log Methods by Types",  x= "Weight Log Methods", y=" Total Number of Records")
+```
+
+
+
+## Conclusion 
+
+there are only 8 distinct Id's in the weight catergory set, 61.1% of reports are manual. it shown that bellabeat need to more effective ways to encourage users to input thier weight information, 
+
+## Plot for calories burned Vs. Steps Taken
+
+```{r}
+merged_final_df %>% 
+  group_by(TotalSteps, Calories) %>% 
+  ggplot(aes(x = TotalSteps, y = Calories, color = Calories)) +
+  geom_point() +
+  geom_smooth() + 
+  theme_bw() +
+  theme(legend.position = c(.05, .8),
+        legend.spacing.y = unit(1, "mm"), 
+        panel.border = element_rect(colour = "black", fill=NA),
+        legend.background = element_blank(),
+        legend.box.background = element_rect(colour = "black")) +
+  labs(title = 'Calories burned by total steps taken',
+       y = 'Calories',
+       x = 'Total Steps')
+```
+
+
+```{r}
+daily_activity2 %>% 
+  select(VeryActiveMinutes, 
+         FairlyActiveMinutes, 
+         LightlyActiveMinutes, 
+         SedentaryMinutes) %>% 
+  summarise(across(everything(), list(sum))) %>% 
+  gather(active_level, minutes) %>% 
+  mutate(active_level = factor(active_level, 
+                               labels = c('Moderate Activity','Light Activity',
+                                          'Sedentary','Heavy Activity'))) %>% 
+  hchart('pie', hcaes(x = active_level, y = minutes)) %>% 
+  hc_title(text = "Distribution of daily activity level in minutes") %>% 
+  hc_tooltip(pointFormat = "<b>Value:</b> {point.y} <br>
+                 <b>Percentage</b> {point.percentage:,.2f}%")
+```
+
+### obvisouly, there is a positive correlation >> the more steps you take, the more calories you burn. To be even more confident about this conclusion, we can check the correlation between these two variables using the Pearson Correlation Coefficient.
+
+```{r}
+cor.test(merged_final_df$TotalSteps, merged_final_df$Calories, method = 'pearson', conf.level = 0.95)
+```
+** Note: The correlation between the variables is almost 0.6. It means that there is a strong relationship between them.
+
+##Activity Distribution
+
+-Sedentary: 81.33%
+
+-Light Activity: 15.82%
+
+-Moderate Activity: 1.11%
+
+-Heavy Activity: 1.74%
+
+**Point to note and take in consideration: 
+It seems like FitBit users are not actively in exercising, rather they might be  using fitbit for aesthetic purposes. 
+
+
+## Sleep Distribution Plotting:
+
+Now, it is good time to visualize previous assumption about FitBit's users and their sleep patterns and habits, I am going to plot their sleep distribution to showcase whether or not they get enough sleep.
+
+```{r}
+sleep %>%
+  select(TotalMinutesAsleep) %>%
+  drop_na () %>%
+  mutate(sleep_quality = ifelse(TotalMinutesAsleep <= 420, 'Less than 7h',
+                         ifelse(TotalMinutesAsleep <= 540, '7h to 9h',
+                                'More than 9h'))) %>%
+  mutate(sleep_quality = factor(sleep_quality,
+                                levels = c('Less than 7h', '7h to 9h', 'More than 9h'))) %>%
+  ggplot(aes(x = TotalMinutesAsleep, fill = sleep_quality)) +
+  geom_histogram(position = 'dodge', bins = 30) +
+  theme_bw() +
+  theme(legend.position = c(.8, .8),
+        legend.title = element_blank(),
+        legend.spacing.y = unit(0, "mm"),
+        panel.border = element_rect(colour = "black", fill = NA),
+        legend.background = element_blank(),
+        legend.box.background = element_rect(colour = "darkgrey")) +
+  labs(title = "Sleep Distribution",
+       x = "Time Slept (minutes)",
+       y = "Count")
+```
+
+
+
+### Inference
+
+We can see that FitBit users follow regular and healthy sleep patterns, between 6-9 hours of sleep per day. Most users are up to CDC's standards when it comes to getting enough rest.
+
+
+# Relationship between Sleep and Distance covered
+
+** Let's find out what's the relationship between how much FitBit users walk and how well they sleep. If you walk more, do you also sleep more? If you do cover less ground on foot does it mean that you sleep better? Let's investigate:
+
+
+
+
+##Inference
+
+BY Observing above plot we can see a relationship between distance covered by users per day and sleeping habits on Average.
+
+
+
+## CONCLUSION
+
+BellaBeat app should be integrated with smartphone and gather further data on users sleeping pattern, walking or joging pattens including,
+calaroies consumption. 
+further data expolration can be done on different topics but to do so, bellabeat need to gather more data through more diverse method.
+
+```{r}
+write.table(merged_final_df, file="BellaBeat_FitBitTracker.csv", row.names=F, sep = ",")
+```
+
+
+
+
+
+
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
